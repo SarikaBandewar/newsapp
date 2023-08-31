@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import NewsItems from './NewsItems';
 import Spinner from './Spinner';
 import PropTypes from 'prop-types';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 export default class News extends Component {
   static defaultProps = {
@@ -20,9 +21,9 @@ export default class News extends Component {
     super(props);
     this.state = {
       articles: [],
-      loading: false,
+      loading: true,
       page: 1,
-      totalResults: 20,
+      totalResults: 0,
     };
     document.title = `NewsMonkey - ${this.capitalize(this.props.category)}`;
   }
@@ -61,17 +62,37 @@ export default class News extends Component {
     this.updateNews();
   };
 
+  fetchMoreData = async () => {
+    this.setState({ page: this.state.page + 1 });
+
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=c3a5bb94220d40fc8f53ad246e97e127&pageSize=${this.props.pageSize}&page=${this.state.page}`;
+
+    // this.setState({ loading: true });
+    let data = await fetch(url);
+    let parsedData = await data.json();
+    console.log(parsedData);
+    this.setState({
+      articles: this.state.articles.concat(parsedData.articles),
+      totalResults: parsedData.totalResults,
+    });
+  };
+
   render() {
     return (
-      <div>
-        <div className="container my-3">
-          <h2 className="text-center">
-            Top {this.capitalize(this.props.category)} Headlines
-          </h2>
-          {this.state.loading && <Spinner />}
-          <div className="row">
-            {!this.state.loading &&
-              this.state.articles.map((elem) => {
+      <>
+        <h2 className="text-center">
+          Top {this.capitalize(this.props.category)} Headlines
+        </h2>
+        {this.state.loading && <Spinner />}
+        <InfiniteScroll
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={this.state.articles.length !== this.state.totalResults}
+          loader={<Spinner />}
+        >
+          <div className="container">
+            <div className="row">
+              {this.state.articles.map((elem) => {
                 return (
                   <div key={elem.url} className="col-md-4">
                     <NewsItems
@@ -86,30 +107,10 @@ export default class News extends Component {
                   </div>
                 );
               })}
-            <div className="container d-flex justify-content-between">
-              <button
-                type="button"
-                className="btn btn-dark"
-                disabled={this.state.page <= 1}
-                onClick={this.handlePreviousClick}
-              >
-                &larr; Previous
-              </button>
-              <button
-                type="button"
-                className="btn btn-dark"
-                disabled={
-                  Math.ceil(this.state.totalResults / this.props.pageSize) <=
-                  this.state.page
-                }
-                onClick={this.handleNextClick}
-              >
-                Next &rarr;
-              </button>
             </div>
           </div>
-        </div>
-      </div>
+        </InfiniteScroll>
+      </>
     );
   }
 }
