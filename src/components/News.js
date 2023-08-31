@@ -34,17 +34,23 @@ export default class News extends Component {
 
   async updateNews() {
     // console.log('page : ' + this.state.page);
-    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=c3a5bb94220d40fc8f53ad246e97e127&pageSize=${this.props.pageSize}&page=${this.state.page}`;
+    this.props.setProgress(0);
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&pageSize=${this.props.pageSize}&page=${this.state.page}`;
 
     this.setState({ loading: true });
+    this.props.setProgress(10);
     let data = await fetch(url);
+    this.props.setProgress(20);
     let parsedData = await data.json();
-    console.log(parsedData);
+    // console.log(parsedData);
+    this.props.setProgress(50);
     this.setState({
       articles: parsedData.articles,
       totalResults: parsedData.totalResults,
       loading: false,
     });
+    console.log(this.state.articles);
+    this.props.setProgress(100);
   }
 
   async componentDidMount() {
@@ -64,8 +70,8 @@ export default class News extends Component {
 
   fetchMoreData = async () => {
     this.setState({ page: this.state.page + 1 });
-
-    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=c3a5bb94220d40fc8f53ad246e97e127&pageSize=${this.props.pageSize}&page=${this.state.page}`;
+    // document.getElementById("row")
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&pageSize=${this.props.pageSize}&page=${this.state.page}`;
 
     // this.setState({ loading: true });
     let data = await fetch(url);
@@ -75,6 +81,7 @@ export default class News extends Component {
       articles: this.state.articles.concat(parsedData.articles),
       totalResults: parsedData.totalResults,
     });
+    console.log(this.state.articles);
   };
 
   render() {
@@ -91,7 +98,7 @@ export default class News extends Component {
           loader={<Spinner />}
         >
           <div className="container">
-            <div className="row">
+            <div id="row" className="row">
               {this.state.articles.map((elem) => {
                 return (
                   <div key={elem.url} className="col-md-4">
